@@ -24,8 +24,8 @@
 # - stretch-x
 # - stretch-y
 #
-# They can be placed anywhere in the canvas (even outside) and the stroke must
-# be at least one pixel wide.
+# They can be placed anywhere in the canvas (preferably outside) and the stroke
+# must be at least one pixel wide.
 
 require "rubygems"
 require "RMagick"
@@ -171,53 +171,51 @@ def inkscape_export_svg(svg, input, output)
   `inkscape -z -C -w #{svg.width()} -h #{svg.height()} -e #{output} #{input}`
 end
 
+def rmagick_with_picture(path)
+  picture = ImageList.new(path).at(0)
+  picture.background_color = "None"
+
+  yield picture
+
+  picture.write(path)
+end
+
 def rmagick_extend_border(input)
-  pic = ImageList.new(input).at(0)
-  pic.background_color = "None"
-
-  new_width = pic.columns + 2
-  new_height = pic.columns + 2
-
-  pic = pic.extent(new_width, new_height, 1, 1)
-  pic.write(input)
+  rmagick_with_picture(input) do |picture|
+    picture = picture.extent(picture.columns + 2, picture.rows + 2, 1, 1)
+  end
 end
 
 def rmagick_add_guides(scaled_svg, input)
-  pic = ImageList.new(input).at(0)
-  pic.background_color = "None"
+  rmagick_with_picture(input) do |picture|
+    draw = Draw.new
+    draw.stroke('black')
+    draw.stroke_antialias(false)
+    draw.stroke_width(1)
 
-  width = pic.columns
-  height = pic.rows
+    rmagick_draw_top_line(draw, scaled_svg.stretch_x.x, scaled_svg.stretch_x.width)
+    rmagick_draw_left_line(draw, scaled_svg.stretch_y.y, scaled_svg.stretch_y.height)
+    rmagick_draw_bottom_line(picture, draw, scaled_svg.padding_x.x, scaled_svg.padding_x.width)
+    rmagick_draw_right_line(picture, draw, scaled_svg.padding_y.y, scaled_svg.padding_y.height)
 
-  draw = Draw.new
-  draw.stroke('black')
-  draw.stroke_antialias('false')
-  draw.stroke_width(1)
-
-  rmagick_draw_top_line(draw, scaled_svg.stretch_x.x, scaled_svg.stretch_x.width)
-  rmagick_draw_left_line(draw, scaled_svg.stretch_y.y, scaled_svg.stretch_y.height)
-  rmagick_draw_bottom_line(pic, draw, scaled_svg.padding_x.x, scaled_svg.padding_x.width)
-  rmagick_draw_right_line(pic, draw, scaled_svg.padding_y.y, scaled_svg.padding_y.height)
-
-  draw.draw(pic)
-
-  pic.write(input)
-end
-
-def rmagick_draw_bottom_line(picture, draw, x, length)
-  draw.line(x, picture.rows - 1, x + length, picture.rows - 1)
+    draw.draw(picture)
+  end
 end
 
 def rmagick_draw_top_line(draw, x, length)
   draw.line(x, 0, x + length, 0)
 end
 
-def rmagick_draw_right_line(picture, draw, y, length)
-  draw.line(picture.columns - 1, y, picture.columns - 1, y + length)
+def rmagick_draw_bottom_line(picture, draw, x, length)
+  draw.line(x, picture.rows - 1, x + length, picture.rows - 1)
 end
 
 def rmagick_draw_left_line(draw, y, length)
   draw.line(0, y, 0, y + length)
+end
+
+def rmagick_draw_right_line(picture, draw, y, length)
+  draw.line(picture.columns - 1, y, picture.columns - 1, y + length)
 end
 
 # ------------------------------------------------------------------------------
