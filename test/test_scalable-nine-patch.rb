@@ -18,7 +18,7 @@
 require "rubygems"
 require "test/unit"
 
-require "scalable-nine-patch"
+require "android-svg-nine-patch"
 
 # ------------------------------------------------------------------------------
 # Classes
@@ -45,6 +45,14 @@ class TestNinePatch < Test::Unit::TestCase
     assert_equal(130, result.y)
     assert_equal(0, result.width)
     assert_equal(579, result.height)
+
+    # absolute
+    result = @svg.deconstruct_path_attributes("M 85.15139,30.10169 0,120.66102")
+
+    assert_equal(85, result.x)
+    assert_equal(30, result.y)
+    assert_equal(0, result.width)
+    assert_equal(120, result.height)
   end
 
   def test_canvas_size()
