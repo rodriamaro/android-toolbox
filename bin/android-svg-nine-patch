@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -w
 #
-# scalable-nine-patch.rb - Create Android NinePatch images from SVGs
+# android-svg-nine-patch - Create Android NinePatch images from SVGs
 # Copyright (C) 2011  Lorenzo Villani
 #
 # This program is free software: you can redistribute it and/or modify it
