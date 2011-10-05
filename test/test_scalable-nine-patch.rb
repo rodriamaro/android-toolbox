@@ -26,7 +26,7 @@ require "scalable-nine-patch"
 
 class TestNinePatch < Test::Unit::TestCase
   def setup()
-    @svg = Svg.new("test.svg")
+    @svg = Svg.new("test/svg/reference.svg")
   end
 
   def test_deconstruct_path_attributes()
