@@ -1,0 +1,90 @@
+#!/usr/bin/ruby -w
+#
+# android-export-svg - Exports SVG to Android resolution classes
+# Copyright (C) 2011 Lorenzo Villani
+#
+# This program is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+
+require 'rubygems'
+require 'yaml'
+
+# ------------------------------------------------------------------------------
+# Constants
+# ------------------------------------------------------------------------------
+
+CLASSES = ['hdpi', 'mdpi', 'ldpi']
+CONVERSION_FACTOR = 1.5
+EXPORTFILE = "Exportfile"
+
+# ------------------------------------------------------------------------------
+# Methods
+# ------------------------------------------------------------------------------
+
+def export_to_nine_patch(file, width, height)
+  for_each_class(file, width, height) do |file, destination, width, height|
+    `android-svg-nine-patch #{file} #{destination} #{width} #{height}`
+  end
+end
+
+def export_to_png(file, width, height)
+  for_each_class(file, width, height) do |file, destination, width, height|
+    `inkscape -z -C -w #{width} -h #{height} -e #{destination} #{file}`
+  end
+end
+
+def for_each_class(file, start_width, start_height)
+  width = start_width
+  height = start_height
+
+  CLASSES.each do |resolution_class|
+    destination = get_destination_for(file, resolution_class)
+
+    yield(file, destination, width, height)
+
+    width /= CONVERSION_FACTOR
+    height /= CONVERSION_FACTOR
+  end
+end
+
+def get_destination_for(file, resolution_class)
+  basename = File.basename(file, ".svg")
+
+  return "../res/drawable-#{resolution_class}/#{basename}.png"
+end
+
+# ------------------------------------------------------------------------------
+# Main
+# ------------------------------------------------------------------------------
+
+if __FILE__ == $PROGRAM_NAME
+  if File.exist?(EXPORTFILE) then
+    exportfile = YAML::load_file(EXPORTFILE)
+
+    exportfile.keys.each do |file|
+      width = exportfile[file]['width']
+      height = exportfile[file]['height']
+
+      if ARGV[0] == "-v" then
+        puts "Exporting #{file}"
+      end
+
+      if file.end_with? '.9.svg' then
+        export_to_nine_patch(file, width, height)
+      else
+        export_to_png(file, width, height)
+      end
+    end
+  else
+    puts "Unable to find Exportfile"
+  end
+end
