@@ -175,14 +175,18 @@ def rmagick_with_picture(path)
   picture = ImageList.new(path).at(0)
   picture.background_color = "None"
 
-  yield picture
+  p = yield picture
+
+  if p.instance_of? Image then
+    picture = p
+  end
 
   picture.write(path)
 end
 
 def rmagick_extend_border(input)
   rmagick_with_picture(input) do |picture|
-    picture = picture.extent(picture.columns + 2, picture.rows + 2, 1, 1)
+    next picture.extent(picture.columns + 2, picture.rows + 2, 1, 1)
   end
 end
 
